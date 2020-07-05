@@ -74,6 +74,17 @@
         :class='(node._labelClass) ? node._labelClass : ""'
         :stroke-width='fontSize / 8'
       ) {{ node.name }}
+      
+    //- -> Node Images
+    g.images#node-images( v-if="nodeImages")
+      image(v-for="node in nodes"
+        :xlink:href='node.image'
+        :width='50'
+        :height='50'
+        :x='node.x-25'
+        :y='node.y-25'
+      )
+      
 </template>
 <script>
 import svgExport from '../lib/js/svgExport.js'
@@ -93,6 +104,7 @@ export default {
     'strLinks',
     'linkWidth',
     'nodeLabels',
+    'nodeImages',
     'linkLabels',
     'labelOffset',
     'nodeSym'
