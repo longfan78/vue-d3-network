@@ -78,6 +78,7 @@ export default {
       dragging: false,
       linkWidth: 1,
       nodeLabels: false,
+      nodeImages: false,
       linkLabels: false,
       nodeSize: 5,
       mouseOfst: {
@@ -106,6 +107,7 @@ export default {
       'strLinks',
       'linkWidth',
       'nodeLabels',
+      'nodeImages',
       'linkLabels',
       'fontSize',
       'labelOffset',
