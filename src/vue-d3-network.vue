@@ -1,10 +1,14 @@
 <script>
 import * as forceSimulation from 'd3-force'
+import * as zoom from 'd3-zoom'
+import * as drag from 'd3-drag'
+import { event as currenEvent } from 'd3-selection'
+import { select as currenSelect } from 'd3-selection'
 import svgRenderer from './components/svgRenderer.vue'
 import canvasRenderer from './components/canvasRenderer.vue'
 import saveImage from './lib/js/saveImage.js'
 import svgExport from './lib/js/svgExport.js'
-const d3 = Object.assign({}, forceSimulation)
+const d3 = Object.assign({}, forceSimulation, zoom, drag)
 
 export default {
   name: 'd3-network',
@@ -129,8 +133,7 @@ export default {
     }
 
     return createElement('div', {
-      attrs: { class: 'net' },
-      on: { 'mousemove': this.move, '&touchmove': this.move }
+      attrs: { class: 'net' }
     }, [createElement(renderer, {
       props, ref, on: { action: this.methodCall }
     })])
@@ -145,6 +148,26 @@ export default {
     this.onResize()
     this.$nextTick(() => {
       this.animate()
+
+      let svg = currenSelect('#svg')
+      let svgcontainer = svg.select('#svgcontainer')
+      let nodes = svg.select('#l-nodes')
+      let nodeImages = svg.select('#node-images')
+
+      let zoom_handler = d3.zoom()
+        .on("zoom", () => {
+          svgcontainer.attr("transform", currenEvent.transform)
+        })
+      zoom_handler(svg)
+
+      let drag_handler = d3.drag()
+        .subject(this.dragsubject)
+        .on("start", this.dragStart)
+        .on("drag", this.drag)
+        .on("end", this.dragEnd)
+      drag_handler(nodes)
+      drag_handler(nodeImages)
+
     })
     if (this.resizeListener) window.addEventListener('resize', this.onResize)
   },
@@ -323,41 +346,24 @@ export default {
       if (this.forces.links) this.links = this.simulation.force('link').links()
     },
     // -- Mouse Interaction
-    move (event) {
-      let pos = this.clientPos(event)
-      if (this.dragging !== false) {
-        if (this.nodes[this.dragging]) {
-          this.simulation.restart()
-          this.simulation.alpha(0.5)
-          this.nodes[this.dragging].fx = pos.x - this.mouseOfst.x
-          this.nodes[this.dragging].fy = pos.y - this.mouseOfst.y
-        }
-      }
+    dragsubject () {
+      return this.simulation.find(currenEvent.x, currenEvent.y)
     },
-    clientPos (event) {
-      let x = (event.touches) ? event.touches[0].clientX : event.clientX
-      let y = (event.touches) ? event.touches[0].clientY : event.clientY
-      x = x || 0
-      y = y || 0
-      return { x, y }
+    drag () {
+      currenEvent.subject.fx = currenEvent.x
+      currenEvent.subject.fy = currenEvent.y
     },
-    dragStart (event, nodeKey) {
-      this.dragging = (nodeKey === false) ? false : nodeKey
-      this.setMouseOffset(event, this.nodes[nodeKey])
-      if (this.dragging === false) {
-        this.simulation.alpha(0.1)
-        this.simulation.restart()
-        this.setMouseOffset()
-      }
+    dragStart () {
+      if (!currenEvent.active)
+        this.simulation.alphaTarget(0.3).restart()
+      currenEvent.subject.fx = currenEvent.subject.x
+      currenEvent.subject.fy = currenEvent.subject.y
     },
     dragEnd () {
-      let node = this.nodes[this.dragging]
-      if (node && !node.pinned) {
-        // unfix node position
-        node.fx = null
-        node.fy = null
-      }
-      this.dragStart(false)
+      if (!currenEvent.active)
+        this.simulation.alphaTarget(0)
+      currenEvent.subject.fx = null
+      currenEvent.subject.fy = null
     },
     // -- Render helpers
     nodeClick (event, node) {
@@ -365,16 +371,6 @@ export default {
     },
     linkClick (event, link) {
       this.$emit('link-click', event, link)
-    },
-    setMouseOffset (event, node) {
-      let x = 0
-      let y = 0
-      if (event && node) {
-        let pos = this.clientPos(event)
-        x = (pos.x) ? pos.x - node.x : node.x
-        y = (pos.y) ? pos.y - node.y : node.y
-      }
-      this.mouseOfst = { x, y }
     },
     screenShot (name, bgColor, toSVG, svgAllCss) {
       let exportFunc
@@ -407,6 +403,7 @@ export default {
   .net
     height 100%
     margin 0
+    fill: skyblue
 
   .net-svg
     // fill: white // background color to export as image

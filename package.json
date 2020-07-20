@@ -15,10 +15,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/emiliorizzo/vue-d3-network"
+    "url": "https://github.com/longfan78/vue-d3-network"
   },
   "bugs": {
-    "url": "https://github.com/emiliorizzo/vue-d3-network/issues"
+    "url": "https://github.com/longfan78/vue-d3-network/issues"
   },
   "keywords": [
     "vue",
@@ -30,7 +30,10 @@
     "component"
   ],
   "dependencies": {
-    "d3-force": "^1.0.6"
+    "d3-drag": "^1.2.5",
+    "d3-force": "^1.0.6",
+    "d3-selection": "^1.4.1",
+    "d3-zoom": "^1.8.3"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.4.0",
